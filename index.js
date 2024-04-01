@@ -5,7 +5,12 @@ const app = express()
 const port = 3000
 
 // middleware
-app.use(cors())
+app.use(cors({
+    origin:[
+        'http://localhost:5173'
+    ],
+    credentials:true,
+}))
 app.use(express.json())
 
 
@@ -29,8 +34,20 @@ async function run() {
 
        // Create Database
         const taskCollection = client.db('taskmangament').collection('task')
+        const userCollection = client.db('taskmangament').collection('users')
 
 
+        // user post
+        app.post('/users', async(req, res) => {
+            const user = req.body
+            const result = await userCollection.insertOne(user)
+            res.send(result)
+        })
+        // get user
+        app.get('/users', async(req, res) => {
+            const result = await userCollection().toArray()
+            res.send(result)
+        })
         // post task into database
         app.post('/task', async(req, res)=>{
             const task = req.body
