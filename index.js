@@ -2,14 +2,14 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 // middleware
 app.use(cors({
-    origin:[
+    origin: [
         'http://localhost:5173'
     ],
-    credentials:true,
+    credentials: true,
 }))
 app.use(express.json())
 
@@ -32,34 +32,56 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-       // Create Database
+        // Create Database
         const taskCollection = client.db('taskmangament').collection('task')
         const userCollection = client.db('taskmangament').collection('users')
 
 
         // user post
-        app.post('/users', async(req, res) => {
+        app.post('/users', async (req, res) => {
             const user = req.body
+            const query = { email: user?.email }
+            const existingUser = await userCollection.findOne(query)
+            if (existingUser) {
+                return res.send({ message: 'user already exist', insertedId: null })
+            }
             const result = await userCollection.insertOne(user)
             res.send(result)
         })
         // get user
-        app.get('/users', async(req, res) => {
-            const result = await userCollection().toArray()
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray()
             res.send(result)
         })
         // post task into database
-        app.post('/task', async(req, res)=>{
+        app.post('/task', async (req, res) => {
             const task = req.body
             const result = await taskCollection.insertOne(task)
             res.send(result)
         })
-
-        app.get('/task', async(req, res) => {
-            const result = await taskCollection.find().toArray()
-            res.send(result)
-        })
         
+        app.get('/task', async (req, res) => {
+            let query = {}
+            const email = req.query.email
+            const currentPage = parseInt(req.query.page) || 0;
+            const itemsPerPage = 6
+
+            if(req.query?.email){
+                query = {email: email}
+            }
+            const totalTask = await taskCollection.countDocuments(query)
+            const totalPages = Math.ceil(totalTask/itemsPerPage)
+            // const startIndex = currentPage * itemsPerPage
+            // const endIndex = startIndex + itemsPerPage
+            const result = await taskCollection.find(query)
+            .skip((currentPage) * itemsPerPage)
+            .limit(itemsPerPage).toArray()
+            res.send({
+                tasks: result,
+                currentPage: currentPage,
+                totalPages: totalPages})
+        })
+
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
