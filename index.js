@@ -15,7 +15,7 @@ app.use(express.json())
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.cbqlcas.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -59,27 +59,53 @@ async function run() {
             const result = await taskCollection.insertOne(task)
             res.send(result)
         })
-        
+
         app.get('/task', async (req, res) => {
             let query = {}
             const email = req.query.email
             const currentPage = parseInt(req.query.page) || 0;
             const itemsPerPage = 6
 
-            if(req.query?.email){
-                query = {email: email}
+            if (req.query?.email) {
+                query = { email: email }
             }
             const totalTask = await taskCollection.countDocuments(query)
-            const totalPages = Math.ceil(totalTask/itemsPerPage)
+            const totalPages = Math.ceil(totalTask / itemsPerPage)
             // const startIndex = currentPage * itemsPerPage
             // const endIndex = startIndex + itemsPerPage
             const result = await taskCollection.find(query)
-            .skip((currentPage) * itemsPerPage)
-            .limit(itemsPerPage).toArray()
+                .skip((currentPage) * itemsPerPage)
+                .limit(itemsPerPage).toArray()
             res.send({
                 tasks: result,
                 currentPage: currentPage,
-                totalPages: totalPages})
+                totalPages: totalPages
+            })
+        })
+
+        app.delete('/task/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await taskCollection.deleteOne(query)
+            res.send(result)
+        })
+
+        app.patch('/task/:id', async (req, res) => {
+            const id = req.params.id
+            const task = req.body
+            const query={_id:new ObjectId(id)}
+            const updateDoc = {
+                $set: {
+                    projectName: task.projectName,
+                    priority: task.priority,
+                    startDate: task.startDate,
+                    endDate: task.endDate,
+                    description: task.description
+                }
+            }
+            const result = await taskCollection.updateOne(query, updateDoc)
+            res.send(result)
+
         })
 
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
