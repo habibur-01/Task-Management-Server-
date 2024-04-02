@@ -60,21 +60,27 @@ async function run() {
             res.send(result)
         })
         app.get('/task', async (req, res) => {
-            const email = req.query.email;
-
-            try {
-                let query = {};
-                if (email) {
-                    query = { email: email };
-                }
-
-                const result = await taskCollection.find(query).toArray();
+            
+                const result = await taskCollection.find().toArray();
                 res.send(result);
-            } catch (error) {
-                console.error("Error occurred while fetching tasks:", error);
-                res.status(500).send("Internal Server Error");
-            }
+            
         });
+        app.get('/task/complete', async(req, res) => {
+            const email =req.query.email
+            const status = req.query.status
+
+            let query ={}
+            if(email && status){
+                query = {
+                    $and: [
+                        { email: email },
+                        { status: status }
+                    ]
+                };
+            }
+            const result = await  taskCollection.find(query).toArray()
+            res.send(result)
+        })
 
         app.get('/task/paginate', async (req, res) => {
             let query = {}
@@ -117,6 +123,19 @@ async function run() {
                     startDate: task.startDate,
                     endDate: task.endDate,
                     description: task.description
+                }
+            }
+            const result = await taskCollection.updateOne(query, updateDoc)
+            res.send(result)
+
+        })
+        app.patch('/task/status/:id', async (req, res) => {
+            const id = req.params.id
+            const data = req.body
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status:data.status
                 }
             }
             const result = await taskCollection.updateOne(query, updateDoc)
