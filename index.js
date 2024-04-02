@@ -59,8 +59,24 @@ async function run() {
             const result = await taskCollection.insertOne(task)
             res.send(result)
         })
-
         app.get('/task', async (req, res) => {
+            const email = req.query.email;
+
+            try {
+                let query = {};
+                if (email) {
+                    query = { email: email };
+                }
+
+                const result = await taskCollection.find(query).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error("Error occurred while fetching tasks:", error);
+                res.status(500).send("Internal Server Error");
+            }
+        });
+
+        app.get('/task/paginate', async (req, res) => {
             let query = {}
             const email = req.query.email
             const currentPage = parseInt(req.query.page) || 0;
@@ -93,7 +109,7 @@ async function run() {
         app.patch('/task/:id', async (req, res) => {
             const id = req.params.id
             const task = req.body
-            const query={_id:new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const updateDoc = {
                 $set: {
                     projectName: task.projectName,
@@ -107,6 +123,7 @@ async function run() {
             res.send(result)
 
         })
+
 
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
