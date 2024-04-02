@@ -60,17 +60,17 @@ async function run() {
             res.send(result)
         })
         app.get('/task', async (req, res) => {
-            
-                const result = await taskCollection.find().toArray();
-                res.send(result);
-            
+
+            const result = await taskCollection.find().toArray();
+            res.send(result);
+
         });
-        app.get('/task/complete', async(req, res) => {
-            const email =req.query.email
+        app.get('/task/complete', async (req, res) => {
+            const email = req.query.email
             const status = req.query.status
 
-            let query ={}
-            if(email && status){
+            let query = {}
+            if (email && status) {
                 query = {
                     $and: [
                         { email: email },
@@ -78,7 +78,7 @@ async function run() {
                     ]
                 };
             }
-            const result = await  taskCollection.find(query).toArray()
+            const result = await taskCollection.find(query).toArray()
             res.send(result)
         })
 
@@ -135,13 +135,55 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const updateDoc = {
                 $set: {
-                    status:data.status
+                    status: data.status
                 }
             }
             const result = await taskCollection.updateOne(query, updateDoc)
             res.send(result)
 
         })
+
+        app.get('/task/count', async (req, res) => {
+            
+                const email = req.query.email;
+
+                if (!email) {
+                    res.status(400).send('Email parameter is required');
+                    return;
+                }
+
+                // Construct the MongoDB query to count tasks with 'progress' status for the specified email
+                const queryTask = {
+                    email: email
+                }
+                const queryProgressData = {
+                    email: email,
+                    status: 'progress'
+                };
+                const queryCompleteTask = {
+                    email: email,
+                    status: 'completed'
+                };
+                const queryTodoTask = {
+                    email: email,
+                    status: 'pending'
+                };
+                
+
+                // Count the number of documents that match the query
+                const alltask = await taskCollection.countDocuments(queryTask)
+                const progress = await taskCollection.countDocuments(queryProgressData);
+                const completed = await taskCollection.countDocuments(queryCompleteTask);
+                const todo = await taskCollection.countDocuments(queryTodoTask);
+
+                res.send({ 
+                    totalTask:alltask,
+                    progressTask: progress,
+                    completedTask:completed,
+                    pendingTask:todo
+                 });
+            
+        });
 
 
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
