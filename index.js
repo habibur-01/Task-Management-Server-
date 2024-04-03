@@ -50,9 +50,16 @@ async function run() {
         })
         // get user
         app.get('/users', async (req, res) => {
-            const result = await userCollection.find().toArray()
+            const email = req.query.email
+            let query={}
+            if(req.query?.email){
+                query={email: email}
+            }
+            const result = await userCollection.find(query).toArray()
             res.send(result)
         })
+
+
         // post task into database
         app.post('/task', async (req, res) => {
             const task = req.body
