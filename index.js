@@ -36,6 +36,7 @@ async function run() {
         // Create Database
         const taskCollection = client.db('taskmangament').collection('task')
         const userCollection = client.db('taskmangament').collection('users')
+        const reviewCollection = client.db('taskmangament').collection('reviews')
 
         // jwt api
         app.post('/jwt', async(req, res)=>{
@@ -297,6 +298,12 @@ async function run() {
                  });
             
         });
+
+        // get reviews
+        app.get('/reviews', async(req,res)=>{
+            const result = await reviewCollection.find().toArray()
+            res.send(result)
+        })
 
 
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
