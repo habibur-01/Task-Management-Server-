@@ -1,7 +1,7 @@
 ## TaskZen
 # Instruction to run locally
 - Download or clone this file
-- Unzippin the file(if download)
+- Unzippinp the file(if download)
 - open the file on a IDE like VSCode
 - Open Terminal (Cntrl+j)
 - Run npm i for install all dependencies
