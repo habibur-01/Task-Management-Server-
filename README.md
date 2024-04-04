@@ -7,6 +7,4 @@
 - Run npm i for install all dependencies
 - Write nodemon index.js and press enter
 
-# Admin Details
-- Email: admin12@gmail.com
-- Password: admin-12
+
